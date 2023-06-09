@@ -22,6 +22,14 @@ def roll_dice(num_rolls, dice=six_sided):
     assert num_rolls > 0, 'Must roll at least once.'
     # BEGIN PROBLEM 1
     "*** YOUR CODE HERE ***"
+    s = 0
+    no1 = 1
+    for i in range(num_rolls):
+        d = dice()
+        if d == 1:
+            no1 = 0
+        s += d
+    return no1 * s + (1 - no1)
     # END PROBLEM 1
 
 
@@ -33,6 +41,7 @@ def free_bacon(score):
     assert score < 100, 'The game should be over.'
     # BEGIN PROBLEM 2
     "*** YOUR CODE HERE ***"
+    return 10 + score // 10 - score % 10
     # END PROBLEM 2
 
 
@@ -51,6 +60,10 @@ def take_turn(num_rolls, opponent_score, dice=six_sided):
     assert opponent_score < 100, 'The game should be over.'
     # BEGIN PROBLEM 3
     "*** YOUR CODE HERE ***"
+    if num_rolls == 0:
+        return free_bacon(opponent_score)
+    else:
+        return roll_dice(num_rolls, dice)
     # END PROBLEM 3
 
 
@@ -60,6 +73,7 @@ def is_swap(player_score, opponent_score):
     """
     # BEGIN PROBLEM 4
     "*** YOUR CODE HERE ***"
+    return abs(player_score % 10 - opponent_score % 10) == opponent_score // 10 % 10
     # END PROBLEM 4
 
 
@@ -100,6 +114,21 @@ def play(strategy0, strategy1, score0=0, score1=0, dice=six_sided,
     who = 0  # Who is about to take a turn, 0 (first) or 1 (second)
     # BEGIN PROBLEM 5
     "*** YOUR CODE HERE ***"
+    stras = [strategy0, strategy1]
+    scs = [score0, score1]
+    last = [0, 0]
+    while scs[0] < goal and scs[1] < goal:
+        nroll = stras[who](scs[who], scs[1-who])
+        this_score = take_turn(nroll, scs[1-who], dice=dice)
+        scs[who] += this_score
+        if feral_hogs and abs(last[who] - nroll) == 2:
+            scs[who] += 3
+        if is_swap(scs[who], scs[1-who]):
+            scs[who], scs[1-who] = scs[1-who], scs[who]
+        last[who] = this_score
+        who = other(who)
+        say = say(scs[0], scs[1])
+    score0, score1 = tuple(scs)
     # END PROBLEM 5
     # (note that the indentation for the problem 6 prompt (***YOUR CODE HERE***) might be misleading)
     # BEGIN PROBLEM 6
@@ -190,6 +219,16 @@ def announce_highest(who, last_score=0, running_high=0):
     assert who == 0 or who == 1, 'The who argument should indicate a player.'
     # BEGIN PROBLEM 7
     "*** YOUR CODE HERE ***"
+    def say(score0, score1):
+        score = (1-who) * score0 + who * score1
+        gain = score - last_score
+        if gain > running_high:
+            new_high = gain
+            print(f"{new_high} point(s)! That's the biggest gain yet for Player {who}")
+        else:
+            new_high = running_high
+        return announce_highest(who, last_score=score, running_high=new_high)
+    return say
     # END PROBLEM 7
 
 
@@ -229,6 +268,12 @@ def make_averaged(original_function, trials_count=1000):
     """
     # BEGIN PROBLEM 8
     "*** YOUR CODE HERE ***"
+    def averaged(*args):
+        s = 0 
+        for n in range(trials_count):
+            s += original_function(*args)
+        return s / trials_count
+    return averaged
     # END PROBLEM 8
 
 
@@ -243,6 +288,13 @@ def max_scoring_num_rolls(dice=six_sided, trials_count=1000):
     """
     # BEGIN PROBLEM 9
     "*** YOUR CODE HERE ***"
+    fun = make_averaged(roll_dice, trials_count=trials_count)
+    best_n, best_v = 0, 0
+    for n in range(1, 11):
+        v = fun(n, dice)
+        if v > best_v:
+            best_n, best_v = n, v
+    return best_n
     # END PROBLEM 9
 
 
@@ -292,7 +344,7 @@ def bacon_strategy(score, opponent_score, cutoff=8, num_rolls=6):
     rolls NUM_ROLLS otherwise.
     """
     # BEGIN PROBLEM 10
-    return 6  # Replace this statement
+    return (free_bacon(opponent_score) < cutoff) * num_rolls  # Replace this statement
     # END PROBLEM 10
 
 
@@ -302,7 +354,13 @@ def swap_strategy(score, opponent_score, cutoff=8, num_rolls=6):
     non-beneficial swap. Otherwise, it rolls NUM_ROLLS.
     """
     # BEGIN PROBLEM 11
-    return 6  # Replace this statement
+    new_score = score + free_bacon(opponent_score)
+    swap = is_swap(new_score, opponent_score)
+    if swap and new_score < opponent_score:
+        return 0
+    elif not swap and new_score - score >= cutoff:
+        return 0
+    return num_rolls  # Replace this statement
     # END PROBLEM 11
 
 
