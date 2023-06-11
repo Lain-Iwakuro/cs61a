@@ -21,6 +21,7 @@ def composer(func=lambda x: x):
     """
     def func_adder(g):
         "*** YOUR CODE HERE ***"
+        return composer(lambda x: func(g(x)))
     return func, func_adder
 
 
@@ -43,6 +44,10 @@ def g(n):
     True
     """
     "*** YOUR CODE HERE ***"
+    if n <= 3:
+        return n
+    else:
+        return g(n - 1) + 2 * g(n - 2) + 3 * g(n - 3)
 
 def g_iter(n):
     """Return the value of G(n), computed iteratively.
@@ -63,6 +68,12 @@ def g_iter(n):
     True
     """
     "*** YOUR CODE HERE ***"
+    if n <= 3:
+        return n
+    gn, gn_1, gn_2 = 3, 2, 1
+    for k in range(3, n):
+        gn, gn_1, gn_2 = gn + 2 * gn_1 + 3 * gn_2, gn, gn_1
+    return gn
 
 
 def missing_digits(n):
@@ -93,7 +104,10 @@ def missing_digits(n):
     True
     """
     "*** YOUR CODE HERE ***"
-
+    if n // 10 == 0:
+        return 0
+    dif = n % 10 - n // 10 % 10 - 1
+    return missing_digits(n // 10) + int(dif > 0) * dif
 
 def count_change(total):
     """Return the number of ways to make change for total.
@@ -112,6 +126,18 @@ def count_change(total):
     True
     """
     "*** YOUR CODE HERE ***"
+    def count_change_limit(total, lim):
+        if total <= 1 or lim == 0:
+            return 1
+        elif total < 2 ** lim:
+            return count_change_limit(total, lim - 1)
+        return count_change_limit(total, lim - 1) + count_change_limit(total - 2 ** lim, lim)
+    def log2_floor(n):
+        if n // 2 == 0:
+            return 0
+        else:
+            return log2_floor(n // 2) + 1
+    return count_change_limit(total, log2_floor(total))
 
 
 def print_move(origin, destination):
@@ -147,6 +173,12 @@ def move_stack(n, start, end):
     """
     assert 1 <= start <= 3 and 1 <= end <= 3 and start != end, "Bad start/end"
     "*** YOUR CODE HERE ***"
+    if n == 1:
+        print_move(start, end)
+    else:
+        move_stack(n - 1, start, 6 - start - end)
+        move_stack(1, start, end)
+        move_stack(n - 1, 6 - start - end, end)
 
 
 from operator import sub, mul
@@ -161,5 +193,5 @@ def make_anonymous_factorial():
     >>> check(HW_SOURCE_FILE, 'make_anonymous_factorial', ['Assign', 'AugAssign', 'FunctionDef', 'Recursion'])
     True
     """
-    return 'YOUR_EXPRESSION_HERE'
+    return lambda n: (lambda x, f: 1 if x == 1 else mul(x, f(sub(x, 1), f)))(n, lambda x, f: 1 if x == 1 else mul(x, f(sub(x, 1), f)))
 
