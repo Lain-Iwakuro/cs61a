@@ -276,6 +276,11 @@ def remove_all(link , value):
     <0 1>
     """
     "*** YOUR CODE HERE ***"
+    if link is Link.empty or link.rest is Link.empty:
+        return
+    while link.rest is not Link.empty and link.rest.first == value:
+        link.rest = link.rest.rest
+    remove_all(link.rest, value)
 
 
 def deep_map(f, link):
@@ -292,6 +297,15 @@ def deep_map(f, link):
     <<2 <4 6> 8> <<10>>>
     """
     "*** YOUR CODE HERE ***"
+    if link is Link.empty:
+        return link
+    if isinstance(link.first, Link):
+        link_mapped = Link(deep_map(f, link.first), deep_map(f, link.rest))
+    else:
+        link_mapped = Link(f(link.first), deep_map(f, link.rest))
+    return link_mapped
+        
+
 
 
 class Tree:
